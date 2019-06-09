@@ -1,32 +1,37 @@
+# Toolchain definition file for cross-compilation with a raspberry pi as a target
+# Heavily based on the one at:
+# https://redmine.emweb.be/projects/wt/wiki/Cross_compile_Wt_on_Raspberry_Pi2
+
+# provide the toolchain when launching cmake, like this:
+# cmake /path/to/cmakelists -DCMAKE_TOOLCHAIN_FILE=/path/to/rpi-toolchain.cmake
+
+# NB: You DON'T need to indicate the toolchain when building on the rpi itself
+# NB2: This script assumes that the target sysroot is mounted locally with sshfs
+
 SET(CMAKE_SYSTEM_NAME Linux)
 SET(CMAKE_SYSTEM_VERSION 1)
 
+# Create toolchain-locations.cmake with paths to rpi-tools and target sysroot.
+# See toolchain-locations-example.cmake for more info
+
 include(${CMAKE_CURRENT_LIST_DIR}/toolchain-locations.cmake)
-# create toolchain-locations.cmake with paths to rpi-tools and sysroot
-# mount the sysroot with sshfs first:
-# sshfs user@ip.of.the.rpi:/ /where/to/mount -o transform_symlinks
-set(RPI_COMPILERS_DIR ${RPI_TOOLS_DIR}/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin)
- 
+
+# Setup compilers:
+
+set(RPI_COMPILERS_DIR ${RPI_TOOLS_DIR}/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin) 
 set(CMAKE_C_COMPILER ${RPI_COMPILERS_DIR}/arm-linux-gnueabihf-gcc)
 set(CMAKE_CXX_COMPILER ${RPI_COMPILERS_DIR}/arm-linux-gnueabihf-g++)
 
-# where is the target environment - we mounted it using sshfs
-SET(CMAKE_FIND_ROOT_PATH ${RPI_SYSROOT_DIR})
+# Where is the target environment, mounted with sshfs:
 
-message("LIBRARIES in: ${CMAKE_SYSTEM_LIBRARY_PATH}")
+set(CMAKE_FIND_ROOT_PATH ${RPI_SYSROOT_DIR})
+set(CMAKE_SYSROOT ${RPI_SYSROOT_DIR})
 
-link_directories(
-    ${RPI_SYSROOT_DIR}/usr/lib/arm-linux-gnueabihf
-)
+# Search for programs in the build host directories:
 
-include_directories(
-    ${RPI_SYSROOT_DIR}/usr/include/arm-linux-gnueabihf
-    ${RPI_SYSROOT_DIR}/usr/include
-)
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 
-# search for programs in the build host directories
-SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+# For libraries and headers in the target directories:
 
-# for libraries and headers in the target directories
-SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
